@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Beam Slope Deflection Calculator</title>
+    <style>
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            font-family: Arial, sans-serif;
+        }
+
+        .title {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+        }
+
+        .form-section {
+            margin-bottom: 30px;
+            background: #f5f5f5;
+            padding: 20px;
+            border-radius: 8px;
+        }
+
+        .form-section h2 {
+            margin-bottom: 20px;
+            color: #444;
+            border-bottom: 2px solid #ddd;
+            padding-bottom: 10px;
+        }
+
+        .input-row {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+            flex: 1;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #555;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        .supports-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 20px;
+        }
+
+        .support-card {
+            background: white;
+            padding: 15px;
+            border-radius: 6px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .spans-container {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .span-card {
+            background: white;
+            padding: 20px;
+            border-radius: 6px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .span-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .loads-container {
+            margin-top: 15px;
+        }
+
+        .load-card {
+            background: #f9f9f9;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 4px;
+            border: 1px solid #eee;
+        }
+
+        .load-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .load-inputs {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+        }
+
+        .control-button {
+            padding: 5px 10px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .control-button.add {
+            background: #4CAF50;
+            color: white;
+        }
+
+        .control-button.remove {
+            background: #f44336;
+            color: white;
+        }
+
+        .submit-button {
+            width: 100%;
+            padding: 15px;
+            background: #2196F3;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+
+        .submit-button:hover {
+            background: #1976D2;
+        }
+
+        .results-section {
+            margin-top: 30px;
+            background: #f5f5f5;
+            padding: 20px;
+            border-radius: 8px;
+        }
+
+        .results-section pre {
+            background: white;
+            padding: 15px;
+            border-radius: 4px;
+            overflow-x: auto;
+        }
+
+        @media (max-width: 768px) {
+            .input-row {
+                flex-direction: column;
+            }
+            
+            .load-inputs {
+                grid-template-columns: 1fr;
+            }
+
+            .supports-container {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="title">Beam Slope Deflection Calculator</h1>
+        
+        <form id="calculationForm" class="calculation-form">
+            <!-- Initial Configuration -->
+            <div class="form-section">
+                <h2>Basic Configuration</h2>
+                <div class="input-row">
+                    <div class="form-group">
+                        <label>Number of Spans</label>
+                        <input 
+                            id="numberOfSpans"
+                            type="number" 
+                            min="1" 
+                            required
+                        />
+                    </div>
+                    <div class="form-group">
+                        <label>Number of Supports</label>
+                        <input 
+                            id="numberOfSupports"
+                            type="number" 
+                            min="2" 
+                            required
+                        />
+                    </div>
+                </div>
+            </div>
+
+            <!-- Support Configuration -->
+            <div class="form-section">
+                <h2>Support Configuration</h2>
+                <div id="supportsContainer" class="supports-container">
+                    <!-- Supports will be dynamically added here -->
+                </div>
+            </div>
+
+            <!-- Spans Configuration -->
+            <div class="form-section">
+                <h2>Spans Configuration</h2>
+                <div id="spansContainer" class="spans-container">
+                    <!-- Spans will be dynamically added here -->
+                </div>
+            </div>
+
+            <button type="submit" class="submit-button">Calculate</button>
+        </form>
+
+        <!-- Results Section -->
+        <div id="resultsSection" class="results-section" style="display: none;">
+            <h2>Results</h2>
+            <pre id="results"></pre>
+        </div>
+    </div>
+
+    <script>
+        class BeamCalculator {
+            constructor() {
+                this.beamConfig = {
+                    numberOfSpans: 1,
+                    numberOfSupports: 2,
+                    supports: [],
+                    spans: []
+                };
+
+                this.initializeFormListeners();
+                this.initializeBeamConfig();
+            }
+
+            initializeFormListeners() {
+                document.getElementById('numberOfSpans').addEventListener('change', (e) => {
+                    this.beamConfig.numberOfSpans = parseInt(e.target.value);
+                    this.updateSpans();
+                });
+
+                document.getElementById('numberOfSupports').addEventListener('change', (e) => {
+                    this.beamConfig.numberOfSupports = parseInt(e.target.value);
+                    this.updateSupports();
+                });
+
+                document.getElementById('calculationForm').addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    this.submitCalculation();
+                });
+            }
+
+            initializeBeamConfig() {
+                document.getElementById('numberOfSpans').value = this.beamConfig.numberOfSpans;
+                document.getElementById('numberOfSupports').value = this.beamConfig.numberOfSupports;
+                this.updateSupports();
+                this.updateSpans();
+            }
+
+            updateSupports() {
+                const supportsContainer = document.getElementById('supportsContainer');
+                supportsContainer.innerHTML = '';
+
+                for (let i = 0; i < this.beamConfig.numberOfSupports; i++) {
+                    const label = String.fromCharCode(65 + i);
+                    const supportCard = this.createSupportCard(label, i);
+                    supportsContainer.appendChild(supportCard);
+                }
+            }
+
+            createSupportCard(label, index) {
+                const div = document.createElement('div');
+                div.className = 'support-card';
+                div.innerHTML = `
+                    <h3>Support ${label}</h3>
+                    <div class="form-group">
+                        <label>Type</label>
+                        <select id="support-${index}-type">
+                            <option value="fixed">Fixed</option>
+                            <option value="hinged">Hinged</option>
+                        </select>
+                    </div>
+                `;
+                return div;
+            }
+
+            updateSpans() {
+                const spansContainer = document.getElementById('spansContainer');
+                spansContainer.innerHTML = '';
+
+                for (let i = 0; i < this.beamConfig.numberOfSpans; i++) {
+                    const spanCard = this.createSpanCard(i);
+                    spansContainer.appendChild(spanCard);
+                }
+            }
+
+            createSpanCard(spanIndex) {
+                const div = document.createElement('div');
+                div.className = 'span-card';
+                div.innerHTML = `
+                    <div class="span-header">
+                        <h3>Span ${spanIndex + 1}</h3>
+                        <div class="span-controls">
+                            <button type="button" class="control-button add" onclick="beamCalculator.addLoadToSpan(${spanIndex})">+ Add Load</button>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Length (m)</label>
+                        <input 
+                            id="span-${spanIndex}-length"
+                            type="number" 
+                            step="0.1" 
+                            required
+                        />
+                    </div>
+                    <div class="loads-container" id="span-${spanIndex}-loads">
+                        ${this.createLoadCard(spanIndex, 0)}
+                    </div>
+                `;
+                return div;
+            }
+
+            createLoadCard(spanIndex, loadIndex) {
+                return `
+                    <div class="load-card" id="span-${spanIndex}-load-${loadIndex}">
+                        <div class="load-header">
+                            <h4>Load ${loadIndex + 1}</h4>
+                            ${loadIndex > 0 ? `
+                                <button 
+                                    type="button" 
+                                    class="control-button remove"
+                                    onclick="beamCalculator.removeLoad(${spanIndex}, ${loadIndex})"
+                                >
+                                    Remove
+                                </button>
+                            ` : ''}
+                        </div>
+                        <div class="load-inputs">
+                            <div class="form-group">
+                                <label>Type</label>
+                                <select id="span-${spanIndex}-load-${loadIndex}-type">
+                                    <option value="point">Point Load</option>
+                                    <option value="udl">UDL</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Value (kN)</label>
+                                <input 
+                                    id="span-${spanIndex}-load-${loadIndex}-value"
+                                    type="number" 
+                                    step="0.1" 
+                                    required
+                                />
+                            </div>
+                            <div class="form-group">
+                                <label>Distance from Left (m)</label>
+                                <input 
+                                    id="span-${spanIndex}-load-${loadIndex}-distance"
+                                    type="number" 
+                                    step="0.1"
+                                    required
+                                />
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            addLoadToSpan(spanIndex) {
+                const loadsContainer = document.getElementById(`span-${spanIndex}-loads`);
+                const loadIndex = loadsContainer.children.length;
+                const loadHtml = this.createLoadCard(spanIndex, loadIndex);
+                const tempDiv = document.createElement('div');
+                tempDiv.innerHTML = loadHtml;
+                loadsContainer.appendChild(tempDiv.firstElementChild);
+            }
+
+            removeLoad(spanIndex, loadIndex) {
+                const loadElement = document.getElementById(`span-${spanIndex}-load-${loadIndex}`);
+                loadElement.remove();
+            }
+
+            gatherFormData() {
+                const supports = [];
+                for (let i = 0; i < this.beamConfig.numberOfSupports; i++) {
+                    const type = document.getElementById(`support-${i}-type`).value;
+                    supports.push({
+                        label: String.fromCharCode(65 + i),
+                        type
+                    });
+                }
+
+                const spans = [];
+                for (let i = 0; i < this.beamConfig.numberOfSpans; i++) {
+                    const loadsContainer = document.getElementById(`span-${i}-loads`);
+                    const loads = [];
+                    
+                    for (let j = 0; j < loadsContainer.children.length; j++) {
+                        loads.push({
+                            type: document.getElementById(`span-${i}-load-${j}-type`).value,
+                            value: parseFloat(document.getElementById(`span-${i}-load-${j}-value`).value),
+                            distance: parseFloat(document.getElementById(`span-${i}-load-${j}-distance`).value)
+                        });
+                    }
+
+                    spans.push({
+                        length: parseFloat(document.getElementById(`span-${i}-length`).value),
+                        loads
+                    });
+                }
+
+                return {
+                    number_of_spans: this.beamConfig.numberOfSpans,
+                    number_of_supports: this.beamConfig.numberOfSupports,
+                    support_types: Object.fromEntries(
+                        supports.map(support => [support.label, support.type])
+                    ),
+                    spans
+                };
+            }
+
+            async submitCalculation() {
+                try {
+                    const payload = this.gatherFormData();
+                    const response = await fetch('http://localhost:5000/calculate_beam', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(payload)
+                    });
+
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+
+                    const results = await response.json();
+                    this.displayResults(results);
+                } catch (error) {
+                    console.error('Calculation error:', error);
+                    alert('Failed to calculate beam. Check console for details.');
+                }
+            }
+
+            displayResults(results) {
+                const resultsSection = document.getElementById('resultsSection');
+                const resultsElement = document.getElementById('results');
+                resultsSection.style.display = 'block';
+                resultsElement.textContent = JSON.stringify(results, null, 2);
+            }
+        }
+
+        // Initialize the calculator when the page loads
+        const beamCalculator = new BeamCalculator();
+    </script>
+</body>
+</html>
