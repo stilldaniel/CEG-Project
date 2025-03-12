@@ -330,6 +330,30 @@
                             required
                         />
                     </div>
+                    <div class="form-group">
+                        <label>Stiffness Value</label>
+                        <input 
+                            id="span-${spanIndex}-stiffness"
+                            type="number" 
+                            step="0.1" 
+                            required
+                        />
+                    </div>
+                    <div class="form-group">
+                        <label>Span Label</label>
+                        <input 
+                            id="span-${spanIndex}-label"
+                            type="text" 
+                            required
+                        />
+                    </div>
+                    <div class="form-group">
+                        <label>Cantilever Span</label>
+                        <select id="span-${spanIndex}-cantilever">
+                            <option value="false">False</option>
+                            <option value="true">True</option>
+                        </select>
+                    </div>
                     <div class="loads-container" id="span-${spanIndex}-loads">
                         ${this.createLoadCard(spanIndex, 0)}
                     </div>
